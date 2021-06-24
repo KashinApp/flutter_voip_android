@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/services.dart';
 
 typedef Future<dynamic> CallEventHandler(
@@ -10,25 +8,24 @@ typedef Future<dynamic> CallEventHandler(
   int callerId,
   String callerName,
   Set<int> opponentsIds,
-  Map<String, String>? userInfo,
 );
 
 class ConnectycubeFlutterCallKit {
+  static const String TAG = "ConnectycubeFlutterCallKit";
+
   static const MethodChannel _channel =
       const MethodChannel('connectycube_flutter_call_kit');
 
-  static ConnectycubeFlutterCallKit get instance => _getInstance();
   static ConnectycubeFlutterCallKit? _instance;
-  static String TAG = "ConnectycubeFlutterCallKit";
 
-  static ConnectycubeFlutterCallKit _getInstance() {
-    if (_instance == null) {
-      _instance = ConnectycubeFlutterCallKit._internal();
-    }
-    return _instance!;
+  static ConnectycubeFlutterCallKit get instance => _getInstance()!;
+
+  static ConnectycubeFlutterCallKit? _getInstance() {
+    if (_instance == null) _instance = ConnectycubeFlutterCallKit._internal();
+    return _instance;
   }
 
-  factory ConnectycubeFlutterCallKit() => _getInstance();
+  factory ConnectycubeFlutterCallKit() => _getInstance()!;
 
   ConnectycubeFlutterCallKit._internal();
 
@@ -38,24 +35,15 @@ class ConnectycubeFlutterCallKit {
     int callerId,
     String callerName,
     Set<int> opponentsIds,
-    Map<String, String>? userInfo,
   )? onCallRejectedWhenTerminated;
 
-  static Function(
-    String sessionId,
-    int callType,
-    int callerId,
-    String callerName,
-    Set<int> opponentsIds,
-    Map<String, String>? userInfo,
-  )? onCallAcceptedWhenTerminated;
+  static late CallEventHandler _onCallAccepted;
+  static late CallEventHandler _onCallRejected;
 
-  static CallEventHandler? _onCallAccepted;
-  static CallEventHandler? _onCallRejected;
-
+  /// Sets up [MessageHandler] for incoming messages.
   void init({
-    CallEventHandler? onCallAccepted,
-    CallEventHandler? onCallRejected,
+    required CallEventHandler onCallAccepted,
+    required CallEventHandler onCallRejected,
   }) {
     _onCallAccepted = onCallAccepted;
     _onCallRejected = onCallRejected;
@@ -67,12 +55,11 @@ class ConnectycubeFlutterCallKit {
   }
 
   static Future<void> showCallNotification({
-    required String? sessionId,
-    required int? callType,
-    required int? callerId,
-    required String? callerName,
-    required Set<int>? opponentsIds,
-    Map<String, String>? userInfo,
+    required String sessionId,
+    required int callType,
+    required int callerId,
+    required String callerName,
+    required Set<int> opponentsIds,
   }) async {
     if (!Platform.isAndroid) return;
 
@@ -81,13 +68,12 @@ class ConnectycubeFlutterCallKit {
       'call_type': callType,
       'caller_id': callerId,
       'caller_name': callerName,
-      'call_opponents': opponentsIds!.join(','),
-      'user_info': userInfo != null ? jsonEncode(userInfo) : jsonEncode(Map()),
+      'call_opponents': opponentsIds.join(','),
     });
   }
 
   static Future<void> reportCallAccepted({
-    required String? sessionId,
+    required String sessionId,
   }) async {
     if (!Platform.isAndroid) return;
 
@@ -97,7 +83,7 @@ class ConnectycubeFlutterCallKit {
   }
 
   static Future<void> reportCallEnded({
-    required String? sessionId,
+    required String sessionId,
   }) async {
     if (!Platform.isAndroid) return;
 
@@ -106,21 +92,19 @@ class ConnectycubeFlutterCallKit {
     });
   }
 
-  static Future<String> getCallState({
-    required String? sessionId,
+  static Future<String?> getCallState({
+    required String sessionId,
   }) async {
     if (!Platform.isAndroid) return Future.value(CallState.UNKNOWN);
 
     return _channel.invokeMethod("getCallState", {
       'session_id': sessionId,
-    }).then((state) {
-      return state.toString();
     });
   }
 
   static Future<void> setCallState({
-    required String? sessionId,
-    required String? callState,
+    required String sessionId,
+    required String callState,
   }) async {
     return _channel.invokeMethod("setCallState", {
       'session_id': sessionId,
@@ -128,39 +112,8 @@ class ConnectycubeFlutterCallKit {
     });
   }
 
-  static Future<Map<String, dynamic>?> getCallData({
-    required String? sessionId,
-  }) async {
-    if (!Platform.isAndroid) return Future.value();
-
-    return _channel.invokeMethod("getCallData", {
-      'session_id': sessionId,
-    }).then((data) {
-      if (data == null) {
-        return Future.value(null);
-      }
-      return Future.value(Map<String, dynamic>.from(data));
-    });
-  }
-
-  static Future<void> clearCallData({
-    required String? sessionId,
-  }) async {
-    if (!Platform.isAndroid) return Future.value();
-
-    return _channel.invokeMethod("clearCallData", {
-      'session_id': sessionId,
-    });
-  }
-
-  static Future<String?> getLastCallId() async {
-    if (!Platform.isAndroid) return Future.value();
-
-    return _channel.invokeMethod("getLastCallId");
-  }
-
   static Future<void> setOnLockScreenVisibility({
-    required bool? isVisible,
+    required bool isVisible,
   }) async {
     if (!Platform.isAndroid) return;
 
@@ -169,53 +122,33 @@ class ConnectycubeFlutterCallKit {
     });
   }
 
+  static Future<dynamic> test() {
+    try {
+      return _channel.invokeMethod("test", {});
+    } catch (_) {
+      return Future.value(null);
+    }
+  }
+
   static Future<dynamic> _handleMethod(MethodCall call) {
     final Map map = call.arguments.cast<String, dynamic>();
     switch (call.method) {
+      case "test":
+        return _channel.invokeMethod("test", {});
       case "onCallAccepted":
-        var userInfo = map['user_info'];
-        var userInfoParsed;
-        if (userInfo != null) {
-          userInfoParsed = Map<String, String>.from(jsonDecode(userInfo));
-        }
-        if (onCallAcceptedWhenTerminated != null) {
-          onCallAcceptedWhenTerminated!.call(
-            map["session_id"],
-            map["call_type"],
-            map["caller_id"],
-            map["caller_name"],
-            (map["call_opponents"] as String)
-                .split(',')
-                .map((stringUserId) => int.parse(stringUserId))
-                .toSet(),
-            userInfoParsed,
-          );
-        }
-
-        if (_onCallAccepted != null) {
-          return _onCallAccepted!(
-            map["session_id"],
-            map["call_type"],
-            map["caller_id"],
-            map["caller_name"],
-            (map["call_opponents"] as String)
-                .split(',')
-                .map((stringUserId) => int.parse(stringUserId))
-                .toSet(),
-            userInfoParsed,
-          );
-        }
-
-        break;
+        return _onCallAccepted(
+          map["session_id"],
+          map["call_type"],
+          map["caller_id"],
+          map["caller_name"],
+          (map["call_opponents"] as String)
+              .split(',')
+              .map((stringUserId) => int.parse(stringUserId))
+              .toSet(),
+        );
       case "onCallRejected":
-        var userInfo = map['user_info'];
-        var userInfoParsed;
-        if (userInfo != null) {
-          userInfoParsed = Map<String, String>.from(jsonDecode(userInfo));
-        }
-
         if (onCallRejectedWhenTerminated != null) {
-          onCallRejectedWhenTerminated!.call(
+          onCallRejectedWhenTerminated?.call(
             map["session_id"],
             map["call_type"],
             map["caller_id"],
@@ -224,30 +157,21 @@ class ConnectycubeFlutterCallKit {
                 .split(',')
                 .map((stringUserId) => int.parse(stringUserId))
                 .toSet(),
-            userInfoParsed,
           );
         }
-
-        if (_onCallRejected != null) {
-          return _onCallRejected!(
-            map["session_id"],
-            map["call_type"],
-            map["caller_id"],
-            map["caller_name"],
-            (map["call_opponents"] as String)
-                .split(',')
-                .map((stringUserId) => int.parse(stringUserId))
-                .toSet(),
-            userInfoParsed,
-          );
-        }
-
-        break;
+        return _onCallRejected(
+          map["session_id"],
+          map["call_type"],
+          map["caller_id"],
+          map["caller_name"],
+          (map["call_opponents"] as String)
+              .split(',')
+              .map((stringUserId) => int.parse(stringUserId))
+              .toSet(),
+        );
       default:
         throw UnsupportedError("Unrecognized JSON message");
     }
-
-    return Future.value();
   }
 }
 
