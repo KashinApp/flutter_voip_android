@@ -37,6 +37,14 @@ class ConnectycubeFlutterCallKit {
     Set<int> opponentsIds,
   )? onCallRejectedWhenTerminated;
 
+  static Function(
+    String sessionId,
+    int callType,
+    int callerId,
+    String callerName,
+    Set<int> opponentsIds,
+  )? onCallAcceptedWhenTerminated;
+
   static late CallEventHandler _onCallAccepted;
   static late CallEventHandler _onCallRejected;
 
@@ -136,6 +144,18 @@ class ConnectycubeFlutterCallKit {
       case "test":
         return _channel.invokeMethod("test", {});
       case "onCallAccepted":
+        if (onCallAcceptedWhenTerminated != null) {
+          onCallAcceptedWhenTerminated?.call(
+            map["session_id"],
+            map["call_type"],
+            map["caller_id"],
+            map["caller_name"],
+            (map["call_opponents"] as String)
+                .split(',')
+                .map((stringUserId) => int.parse(stringUserId))
+                .toSet(),
+          );
+        }
         return _onCallAccepted(
           map["session_id"],
           map["call_type"],
