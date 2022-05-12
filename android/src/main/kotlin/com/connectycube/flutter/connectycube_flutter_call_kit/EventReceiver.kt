@@ -8,6 +8,8 @@ import android.text.TextUtils
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.connectycube.flutter.connectycube_flutter_call_kit.background_isolates.ConnectycubeFlutterBgPerformingService
+import com.connectycube.flutter.connectycube_flutter_call_kit.utils.isApplicationForeground
 
 
 class EventReceiver : BroadcastReceiver() {
@@ -39,6 +41,16 @@ class EventReceiver : BroadcastReceiver() {
                         .sendBroadcast(broadcastIntent)
 
                 NotificationManagerCompat.from(context).cancel(callId.hashCode())
+
+                processCallEnded(context, callId!!)
+
+                if (!isApplicationForeground(context)) {
+                    broadcastIntent.putExtra("userCallbackHandleName", REJECTED_IN_BACKGROUND)
+                    ConnectycubeFlutterBgPerformingService.enqueueMessageProcessing(
+                        context,
+                        broadcastIntent
+                    )
+                }
             }
 
             ACTION_CALL_ACCEPT -> {
@@ -63,6 +75,20 @@ class EventReceiver : BroadcastReceiver() {
                         .sendBroadcast(broadcastIntent)
 
                 NotificationManagerCompat.from(context).cancel(callId.hashCode())
+
+                saveCallState(context, callId!!, CALL_STATE_ACCEPTED)
+
+                if (!isApplicationForeground(context)) {
+                    broadcastIntent.putExtra("userCallbackHandleName", ACCEPTED_IN_BACKGROUND)
+                    ConnectycubeFlutterBgPerformingService.enqueueMessageProcessing(
+                        context,
+                        broadcastIntent
+                    )
+                }
+
+                val launchIntent = getLaunchIntent(context)
+                launchIntent?.action = ACTION_CALL_ACCEPT
+                context.startActivity(launchIntent)
             }
 
             ACTION_CALL_NOTIFICATION_CANCELED -> {
