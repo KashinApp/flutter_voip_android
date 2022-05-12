@@ -5,11 +5,20 @@ const val EXTRA_CALL_TYPE = "extra_call_type"
 const val EXTRA_CALL_INITIATOR_ID = "extra_call_initiator_id"
 const val EXTRA_CALL_INITIATOR_NAME = "extra_call_initiator_name"
 const val EXTRA_CALL_OPPONENTS = "extra_call_opponents"
+//<<<<<<< HEAD
+//=======
+const val EXTRA_CALL_USER_INFO = "extra_call_user_info"
+const val EXTRA_PUSH_TOKEN = "extra_push_token"
+//>>>>>>> 7b648375c2071591ebfada3aa2780125698636ad
 
 const val ACTION_CALL_ACCEPT = "action_call_accept"
 const val ACTION_CALL_REJECT = "action_call_reject"
 const val ACTION_CALL_NOTIFICATION_CANCELED = "action_call_notification_canceled"
 const val ACTION_CALL_ENDED = "action_call_ended"
+const val ACTION_TOKEN_REFRESHED = "action_token_refreshed"
+
+const val REJECTED_IN_BACKGROUND = "rejected_in_background"
+const val ACCEPTED_IN_BACKGROUND = "accepted_in_background"
 
 const val CALL_TYPE_PLACEHOLDER = "Incoming %s call"
 
