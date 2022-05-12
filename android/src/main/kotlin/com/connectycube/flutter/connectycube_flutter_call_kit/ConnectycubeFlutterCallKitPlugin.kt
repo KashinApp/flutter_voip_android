@@ -308,7 +308,7 @@ class ConnectycubeFlutterCallKitPlugin : FlutterPlugin, MethodCallHandler,
     }
 
 
-    override fun onNewIntent(intent: Intent?): Boolean {
+    override public fun onNewIntent(intent: Intent): Boolean {
         if (intent != null && intent.action != null && intent.action == ACTION_CALL_ACCEPT) {
             setOnLockScreenVisibility(true)
         }

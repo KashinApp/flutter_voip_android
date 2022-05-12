@@ -2,8 +2,8 @@ group 'com.connectycube.flutter.connectycube_flutter_call_kit'
 version '1.0-SNAPSHOT'
 
 buildscript {
-//    ext.kotlin_version = '1.3.50'
-    ext.kotlin_version = '1.6.21'
+    ext.kotlin_version = '1.3.50'
+//    ext.kotlin_version = '1.6.21'
 
     repositories {
         google()
@@ -15,6 +15,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:4.0.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.10'
+//        classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
     }
 }
 
@@ -27,6 +28,8 @@ rootProject.allprojects {
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+//apply plugin: 'kotlinx-serialization'
+
 
 android {
     compileSdkVersion 29
@@ -48,4 +51,5 @@ dependencies {
 
     implementation platform('com.google.firebase:firebase-bom:29.0.3')
     implementation 'com.google.firebase:firebase-messaging-ktx'
+//    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
 }
