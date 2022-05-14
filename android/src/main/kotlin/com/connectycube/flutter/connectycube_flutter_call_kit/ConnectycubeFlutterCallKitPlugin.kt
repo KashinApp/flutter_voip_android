@@ -178,7 +178,7 @@ class ConnectycubeFlutterCallKitPlugin : FlutterPlugin, MethodCallHandler, Plugi
         unRegisterCallStateReceiver()
     }
 
-    override fun onNewIntent(intent: Intent?): Boolean {
+    override fun onNewIntent(@NonNull intent: Intent): Boolean {
         if (intent != null && intent.action != null && intent.action == ACTION_CALL_ACCEPT) {
             setOnLockScreenVisibility(true)
         }
